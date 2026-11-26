@@ -15,7 +15,26 @@ class TrackerLocationIndexController extends Controller
             ->latest('recorded_at')
             ->paginate(50);
 
-        return view('tracker.locations.index', compact('locations'));
+        $mapLocations = $locations->getCollection()
+            ->filter(fn (TrackerLocation $location): bool => $location->latitude !== null && $location->longitude !== null)
+            ->map(fn (TrackerLocation $location): array => [
+                'id' => $location->id,
+                'latitude' => (float) $location->latitude,
+                'longitude' => (float) $location->longitude,
+                'altitude_m' => $location->altitude_m !== null ? (float) $location->altitude_m : null,
+                'speed_kmh' => $location->speed_kmh !== null ? (float) $location->speed_kmh : null,
+                'satellites' => $location->satellites,
+                'hdop' => $location->hdop !== null ? (float) $location->hdop : null,
+                'gps_fix' => (bool) $location->gps_fix,
+                'source' => $location->source,
+                'device_name' => $location->trackerDevice?->name ?: ($location->trackerDevice?->device_id ?: 'Unknown device'),
+                'device_id' => $location->trackerDevice?->device_id ?? 'N/A',
+                'recorded_at' => $location->recorded_at?->timezone('Asia/Karachi')->format('M j, Y · g:i:s A') ?? '—',
+                'recorded_timestamp' => $location->recorded_at?->timestamp ?? 0,
+            ])
+            ->values();
+
+        return view('tracker.locations.index', compact('locations', 'mapLocations'));
     }
 
     public function destroy(TrackerLocation $trackerLocation): RedirectResponse

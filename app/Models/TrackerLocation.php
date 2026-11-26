@@ -11,6 +11,7 @@ class TrackerLocation extends Model
     use HasFactory;
 
     protected $fillable = [
+        'tracker_device_id',
         'latitude',
         'longitude',
         'altitude_m',
