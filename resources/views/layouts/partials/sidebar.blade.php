@@ -22,15 +22,8 @@
 <aside id="app-sidebar" class="invisible fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col bg-[#14213d] text-slate-300 transition-all duration-200 lg:visible lg:translate-x-0" aria-label="Sidebar">
     {{-- Brand --}}
     <div class="flex items-center justify-between border-b border-white/10 px-5 py-5">
-        <div class="flex items-center gap-3">
-            <svg class="size-8 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linejoin="round" d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z" />
-                <circle cx="12" cy="9" r="2.5" />
-            </svg>
-            <div>
-                <p class="text-base font-bold leading-tight text-white">EDEN TRACKER</p>
-                <p class="text-xs text-slate-400">Fleet Tracking System</p>
-            </div>
+        <div class="min-w-0 rounded px-1.5 py-1">
+            <img src="{{ asset('images/logo2.png') }}" alt="Eden Tracker" class="h-11 w-auto max-w-full object-contain">
         </div>
         <button type="button" id="btn-close-sidebar" class="cursor-pointer text-2xl leading-none text-slate-400 hover:text-white lg:hidden" aria-label="Close menu">&times;</button>
     </div>
