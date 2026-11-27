@@ -31,7 +31,7 @@ test('locations index renders correctly with map modal and map locations data', 
     $response = $this->get(route('tracker.locations.index'));
 
     $response->assertOk();
-    $response->assertSee('Location activity');
+    $response->assertSee('Location Activity');
     $response->assertSee('Full screen map');
     $response->assertSee('id="gps-map-modal"', false);
     $response->assertSee('id="maplibre-canvas"', false);

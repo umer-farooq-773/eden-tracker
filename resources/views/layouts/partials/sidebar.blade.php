@@ -7,11 +7,7 @@
         ['label' => 'Location Activity', 'route' => 'tracker.locations.index', 'active' => 'tracker.locations.*',
          'icon' => 'fa-solid fa-location-dot'],
         ['label' => 'Trip History', 'route' => 'tracker.trips.index', 'active' => 'tracker.trips.*',
-         'icon' => 'fa-solid fa-route'],
-        ['label' => 'Reports', 'route' => 'tracker.reports.index', 'active' => 'tracker.reports.*',
-         'icon' => 'fa-solid fa-chart-column'],
-        ['label' => 'Settings', 'route' => 'tracker.settings.index', 'active' => 'tracker.settings.*',
-         'icon' => 'fa-solid fa-sliders'],
+         'icon' => 'fa-solid fa-route']
     ];
 @endphp
 

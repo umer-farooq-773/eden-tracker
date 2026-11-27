@@ -5,6 +5,7 @@ use App\Http\Controllers\TrackerLocationIndexController;
 use App\Http\Controllers\TrackerLocationUpdatesController;
 use App\Http\Controllers\TrackerNotificationController;
 use App\Http\Controllers\TrackerTripController;
+use App\Http\Controllers\TrackerTripHistoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -25,6 +26,12 @@ Route::get('/tracker/notifications', [TrackerNotificationController::class, 'ind
     ->name('tracker.notifications.index');
 Route::patch('/tracker/notifications/read', [TrackerNotificationController::class, 'markAllRead'])
     ->name('tracker.notifications.read');
+
+Route::get('/tracker/trips', [TrackerTripHistoryController::class, 'index'])
+    ->name('tracker.trips.index');
+Route::get('/tracker/trips/data', [TrackerTripHistoryController::class, 'data'])
+    ->name('tracker.trips.data');
+
 Route::post('/tracker/devices/{trackerDevice}/trip/start', [TrackerTripController::class, 'start'])
     ->name('tracker.trips.start');
 Route::post('/tracker/devices/{trackerDevice}/trip/stop', [TrackerTripController::class, 'stop'])

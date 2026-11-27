@@ -50,4 +50,71 @@
         position: absolute;
         inset: 0;
     }
+    @media (max-width: 79.999rem) {
+        .location-records-table {
+            min-width: 0;
+        }
+        .location-records-table thead {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        .location-records-table tbody {
+            display: grid;
+            gap: 0.75rem;
+            padding: 0.75rem;
+        }
+        .location-records-table tbody tr[data-location-row] {
+            display: grid;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.875rem;
+            background: #fff;
+        }
+        .location-records-table tbody tr[data-location-row]:hover {
+            background: #fff;
+        }
+        .location-records-table tbody td[data-label] {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            text-align: right;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+        .location-records-table tbody td[data-label]::before {
+            flex: 0 0 34%;
+            color: #64748b;
+            content: attr(data-label);
+            font-size: 0.675rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            line-height: 1.25rem;
+            text-align: left;
+            text-transform: uppercase;
+        }
+        .location-records-table tbody td[data-label] > * {
+            max-width: 66%;
+            min-width: 0;
+        }
+        .location-records-table tbody tr[data-location-row] td:last-child {
+            border-bottom: 0;
+        }
+        .location-records-table tbody tr[data-empty-state] {
+            display: block;
+        }
+        .location-records-table tbody tr[data-empty-state] td {
+            display: block;
+            padding: 2.5rem 1rem;
+        }
+    }
 </style>

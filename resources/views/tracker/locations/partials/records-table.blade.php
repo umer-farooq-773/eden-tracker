@@ -7,7 +7,7 @@
     @include('tracker.locations.partials.toolbar')
 
     <div class="overflow-x-auto">
-        <table class="w-full min-w-[1180px] border-collapse text-left text-sm">
+        <table class="location-records-table w-full min-w-[1180px] border-collapse text-left text-sm">
             <thead>
                 <tr class="bg-slate-50/90 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                     <th scope="col" class="px-5 py-3.5 sm:px-6">Record</th>
