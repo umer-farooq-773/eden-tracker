@@ -17,6 +17,7 @@ class TrackerDevice extends Model
         'token_hash',
         'last_seen_at',
         'is_active',
+        'is_trip_tracking',
     ];
 
     protected $hidden = ['token_hash'];
@@ -26,6 +27,7 @@ class TrackerDevice extends Model
         return [
             'last_seen_at' => 'immutable_datetime',
             'is_active' => 'boolean',
+            'is_trip_tracking' => 'boolean',
         ];
     }
 
@@ -37,5 +39,25 @@ class TrackerDevice extends Model
     public function latestLocation(): HasOne
     {
         return $this->hasOne(TrackerLocation::class)->latestOfMany('recorded_at');
+    }
+
+    public function activeTrip(): HasOne
+    {
+        return $this->hasOne(VehicleTrip::class)->whereNull('ended_at')->latestOfMany();
+    }
+
+    public function activeParking(): HasOne
+    {
+        return $this->hasOne(VehicleParked::class)->whereNull('ended_at')->latestOfMany();
+    }
+
+    public function parkingRecords(): HasMany
+    {
+        return $this->hasMany(VehicleParked::class);
+    }
+
+    public function trips(): HasMany
+    {
+        return $this->hasMany(VehicleTrip::class);
     }
 }

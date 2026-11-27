@@ -17,6 +17,8 @@
         {{-- Page specific buttons: @section('header-actions') --}}
         @yield('header-actions')
 
+        @include('layouts.partials.notifications')
+
         @auth
             <div class="flex items-center gap-2">
                 <span class="flex size-9 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">

@@ -10,6 +10,7 @@
 
 @section('content')
     @include('tracker.locations.partials.summary-cards')
+    @include('tracker.locations.partials.device-trips')
     @include('tracker.locations.partials.records-table')
 @endsection
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\TrackerDevice;
+use App\Services\TrackerActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -13,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class TrackerLocationController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, TrackerActivityService $activityService): JsonResponse
     {
         if (! $request->isJson()) {
             return response()->json([
@@ -94,8 +95,8 @@ class TrackerLocationController extends Controller
         $recordedAt = Carbon::parse($data['recorded_at'])->utc();
         $receivedAt = now('UTC');
 
-        DB::transaction(function () use ($device, $data, $recordedAt, $receivedAt): void {
-            $device->locations()->create([
+        DB::transaction(function () use ($device, $data, $recordedAt, $receivedAt, $activityService): void {
+            $location = $device->locations()->create([
                 'latitude' => $data['latitude'] ?? null,
                 'longitude' => $data['longitude'] ?? null,
                 'altitude_m' => $data['altitude_m'] ?? null,
@@ -108,6 +109,7 @@ class TrackerLocationController extends Controller
                 'received_at' => $receivedAt,
             ]);
 
+            $activityService->recordLocation($device, $location);
             $device->forceFill(['last_seen_at' => $receivedAt])->save();
         });
 

@@ -1,6 +1,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const rawLocations = @json($mapLocations);
+        let activeParkings = @json($mapParkings);
 
         // Modal elements
         const modal = document.getElementById('gps-map-modal');
@@ -30,6 +31,7 @@
         let mapInstance = null;
         let currentStyleIndex = 0;
         let markersList = [];
+        let parkingMarkers = [];
         let isAreaContextActive = false;
         let detectedLocationName = null;
         let nearbyPlaceMarkers = [];
@@ -427,7 +429,11 @@
 
         // Add layers (line & waypoints)
         function addRouteLayersToMap() {
-            if (!mapInstance || sortedLocations.length === 0) return;
+            if (!mapInstance) return;
+            if (sortedLocations.length === 0) {
+                renderParkingMarkers();
+                return;
+            }
 
             const lineCoordinates = sortedLocations.map(p => [p.longitude, p.latitude]);
 
@@ -535,14 +541,53 @@
 
                 markersList.push({ id: item.id, marker, popup, item });
             });
+
+            renderParkingMarkers();
+        }
+
+        function renderParkingMarkers() {
+            parkingMarkers.forEach(marker => marker.remove());
+            parkingMarkers = [];
+            if (!mapInstance) return;
+
+            activeParkings.forEach(parking => {
+                const location = parking.location || {};
+                if (!Number.isFinite(Number(location.latitude)) || !Number.isFinite(Number(location.longitude))) return;
+
+                const markerElement = document.createElement('div');
+                markerElement.className = 'flex size-8 items-center justify-center rounded-full border-2 border-white bg-amber-500 text-xs font-bold text-slate-950 shadow-lg';
+                markerElement.textContent = 'P';
+                markerElement.title = `${parking.device_name} · parked / no GPS update`;
+
+                const popup = new maplibregl.Popup({ offset: 16 }).setHTML(`
+                    <div class="min-w-[210px] space-y-1 text-xs">
+                        <p class="font-semibold text-slate-900">${escapeHtml(parking.device_name)} · Parked / no signal</p>
+                        <p class="text-slate-600">Since ${escapeHtml(parking.started_at)}</p>
+                        <p class="font-mono text-slate-700">${Number(location.latitude).toFixed(6)}, ${Number(location.longitude).toFixed(6)}</p>
+                        <p class="text-slate-600">Last speed: ${location.speed_kmh !== null ? `${Number(location.speed_kmh).toFixed(1)} km/h` : '—'}</p>
+                    </div>
+                `);
+
+                const marker = new maplibregl.Marker({ element: markerElement })
+                    .setLngLat([Number(location.longitude), Number(location.latitude)])
+                    .setPopup(popup)
+                    .addTo(mapInstance);
+                parkingMarkers.push(marker);
+            });
         }
 
         function clearMarkers() {
             markersList.forEach(m => m.marker.remove());
             markersList = [];
+            parkingMarkers.forEach(marker => marker.remove());
+            parkingMarkers = [];
         }
 
         function applyLocationUpdates(payload) {
+            if (payload.active_parkings) {
+                activeParkings = payload.active_parkings;
+                renderParkingMarkers();
+            }
             if (!payload.data?.length) {
                 return;
             }
@@ -760,7 +805,7 @@
 
         // Open Modal
         function openModal(focusRecordId = null) {
-            if (sortedLocations.length === 0) {
+            if (sortedLocations.length === 0 && activeParkings.length === 0) {
                 alert('No GPS coordinates available to display on the map.');
                 return;
             }
@@ -796,6 +841,7 @@
             mapInstance.setStyle(newStyle.style);
             mapInstance.once('style.load', () => {
                 addRouteLayersToMap();
+                renderParkingMarkers();
             });
         }
 
