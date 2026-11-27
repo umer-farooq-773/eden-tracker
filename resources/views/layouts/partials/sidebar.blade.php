@@ -1,5 +1,4 @@
 @php
-    // Add or change menu items here. Set 'route' to your real route name.
     $menu = [
         ['label' => 'Live Map', 'route' => 'tracker.live-map', 'active' => 'tracker.live-map*',
          'icon' => 'fa-solid fa-map-location-dot'],
@@ -21,7 +20,7 @@
 
 <aside id="app-sidebar" class="invisible fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col bg-[#14213d] text-slate-300 transition-all duration-200 lg:visible lg:translate-x-0" aria-label="Sidebar">
     {{-- Brand --}}
-    <div class="flex items-center justify-between border-b border-white/10 px-5 py-5">
+    <div class="flex h-22 shrink-0 items-center justify-between border-b border-white/10 px-5">
         <div class="min-w-0 rounded px-1.5 py-1">
             <img src="{{ asset('images/logo2.png') }}" alt="Eden Tracker" class="h-11 w-auto max-w-full object-contain">
         </div>
