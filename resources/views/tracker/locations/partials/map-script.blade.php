@@ -144,12 +144,23 @@
         ];
 
         // Sort locations chronologically (oldest to newest) to draw the movement trajectory correctly
-        const sortedLocations = [...rawLocations].sort((a, b) => {
+        let sortedLocations = [...rawLocations].sort((a, b) => {
             if (a.recorded_timestamp && b.recorded_timestamp) {
                 return a.recorded_timestamp - b.recorded_timestamp;
             }
             return a.id - b.id;
         });
+
+        const updatesUrl = @json(route('tracker.locations.updates'));
+        const isFirstPage = @json($locations->currentPage() === 1);
+        let lastSeenLocationId = @json($locationCursor);
+        let isPollingLocations = false;
+        const recordsBody = document.getElementById('location-records-body');
+        const totalCountEl = document.getElementById('location-total-count');
+        const pageCountEl = document.getElementById('location-page-count');
+        const pointCountEl = document.getElementById('map-point-count');
+        const mapToolbarCountEl = document.getElementById('map-toolbar-count');
+        const recordsSummaryEl = document.getElementById('records-summary-text');
 
         // Distance in meters between two lat/lng points
         function getDistanceMeters(p1, p2) {
@@ -531,6 +542,116 @@
             markersList = [];
         }
 
+        function applyLocationUpdates(payload) {
+            if (!payload.data?.length) {
+                return;
+            }
+
+            lastSeenLocationId = Math.max(lastSeenLocationId, payload.cursor || lastSeenLocationId);
+
+            const newMapLocations = payload.data.filter(location =>
+                location.latitude !== null && location.longitude !== null
+            );
+
+            if (newMapLocations.length > 0) {
+                const knownIds = new Set(sortedLocations.map(location => location.id));
+                newMapLocations.forEach(location => {
+                    if (!knownIds.has(location.id)) {
+                        sortedLocations.push(location);
+                    }
+                });
+                sortedLocations.sort((a, b) => {
+                    if (a.recorded_timestamp && b.recorded_timestamp) {
+                        return a.recorded_timestamp - b.recorded_timestamp;
+                    }
+                    return a.id - b.id;
+                });
+
+                if (pointCountEl) {
+                    pointCountEl.textContent = `${sortedLocations.length} positions`;
+                }
+
+                if (mapToolbarCountEl) {
+                    mapToolbarCountEl.textContent = sortedLocations.length;
+                }
+
+                if (openModalBtn) {
+                    openModalBtn.disabled = false;
+                    openModalBtn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                    openModalBtn.classList.add('bg-sky-600', 'text-black', 'hover:bg-sky-700', 'cursor-pointer', 'shadow-sky-600/20');
+                    openModalBtn.title = 'Open the route map';
+                }
+
+                if (mapInstance?.isStyleLoaded()) {
+                    addRouteLayersToMap();
+                    updateMapStats();
+
+                    const latestPoint = sortedLocations[sortedLocations.length - 1];
+                    if (latestPoint && !mapInstance.getBounds().contains([latestPoint.longitude, latestPoint.latitude])) {
+                        mapInstance.easeTo({
+                            center: [latestPoint.longitude, latestPoint.latitude],
+                            duration: 700,
+                            essential: true,
+                        });
+                    }
+                }
+            }
+
+            if (recordsBody && payload.rows) {
+                recordsBody.querySelector('[data-empty-state]')?.remove();
+                recordsBody.insertAdjacentHTML('afterbegin', payload.rows);
+
+                const rows = recordsBody.querySelectorAll('[data-location-row]');
+                rows.forEach((row, index) => {
+                    if (index >= 50) {
+                        row.remove();
+                    }
+                });
+
+                if (pageCountEl) {
+                    pageCountEl.textContent = new Intl.NumberFormat().format(
+                        recordsBody.querySelectorAll('[data-location-row]').length
+                    );
+                }
+            }
+
+            if (totalCountEl && typeof payload.total === 'number') {
+                totalCountEl.textContent = new Intl.NumberFormat().format(payload.total);
+            }
+
+            if (recordsSummaryEl && typeof payload.total === 'number' && payload.total > 0) {
+                recordsSummaryEl.textContent = `Showing 1–${Math.min(payload.total, 50)} of ${new Intl.NumberFormat().format(payload.total)} records`;
+            }
+        }
+
+        async function pollLocationUpdates() {
+            if (!isFirstPage || isPollingLocations || document.hidden) {
+                return;
+            }
+
+            isPollingLocations = true;
+            try {
+                const response = await fetch(`${updatesUrl}?after_id=${lastSeenLocationId}`, {
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store',
+                    credentials: 'same-origin',
+                });
+
+                if (response.ok) {
+                    applyLocationUpdates(await response.json());
+                }
+            } catch (error) {
+                // The next poll retries automatically when the connection returns.
+            } finally {
+                isPollingLocations = false;
+            }
+        }
+
+        if (isFirstPage) {
+            pollLocationUpdates();
+            window.setInterval(pollLocationUpdates, 5000);
+        }
+
         // Fit map bounds to encompass all positions with contextual zoom
         function fitAllCoordinates(maxZoom = 15.5) {
             if (!mapInstance || sortedLocations.length === 0) return;
@@ -731,13 +852,15 @@
             }
         });
 
-        // Row Focus Buttons
-        document.querySelectorAll('.js-row-focus-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const recordId = btn.getAttribute('data-id');
-                openModal(recordId);
-            });
+        // Delegate row actions so newly polled rows work without new listeners.
+        recordsBody?.addEventListener('click', (event) => {
+            const button = event.target.closest('.js-row-focus-btn');
+            if (!button) {
+                return;
+            }
+
+            event.stopPropagation();
+            openModal(button.getAttribute('data-id'));
         });
 
         // Close on ESC

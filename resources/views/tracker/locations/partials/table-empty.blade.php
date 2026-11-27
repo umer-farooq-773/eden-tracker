@@ -1,4 +1,4 @@
-<tr>
+<tr data-empty-state>
     <td colspan="10" class="px-6 py-20 text-center">
         <span class="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
             <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">

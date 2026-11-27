@@ -22,7 +22,7 @@
                     <th scope="col" class="px-5 py-3.5">Timestamps (PKT)</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody id="location-records-body" class="divide-y divide-slate-100">
                 @forelse ($locations as $location)
                     @include('tracker.locations.partials.table-row')
                 @empty

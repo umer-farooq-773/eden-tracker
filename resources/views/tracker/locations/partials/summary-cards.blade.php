@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between gap-4">
             <div>
                 <p class="text-sm font-medium text-slate-500">Total location records</p>
-                <p class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{{ number_format($locations->total()) }}</p>
+                <p id="location-total-count" class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{{ number_format($locations->total()) }}</p>
             </div>
             <div class="flex size-11 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
                 <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -18,7 +18,7 @@
         <div class="flex items-center justify-between gap-4">
             <div>
                 <p class="text-sm font-medium text-slate-500">Records on this page</p>
-                <p class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{{ number_format($locations->count()) }}</p>
+                <p id="location-page-count" class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{{ number_format($locations->count()) }}</p>
             </div>
             <div class="flex size-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
                 <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

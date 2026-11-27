@@ -1,4 +1,4 @@
-<tr class="transition-colors hover:bg-sky-50/40">
+<tr data-location-row data-id="{{ $location->id }}" class="transition-colors hover:bg-sky-50/40">
     <td class="whitespace-nowrap px-5 py-4 font-mono text-xs font-medium text-slate-500 sm:px-6">
         #{{ $location->id }}
     </td>

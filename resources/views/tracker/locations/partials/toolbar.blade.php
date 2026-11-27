@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-2 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
     <div>
         <h2 id="records-heading" class="text-base font-semibold text-slate-950">GPS records</h2>
-        <p class="mt-1 text-sm text-slate-500">
+        <p id="records-summary-text" class="mt-1 text-sm text-slate-500">
             @if ($locations->total() > 0)
                 Showing {{ number_format($locations->firstItem()) }}–{{ number_format($locations->lastItem()) }} of {{ number_format($locations->total()) }} records
             @else
@@ -29,7 +29,7 @@
             </svg>
             <span>Full screen map</span>
             <span class="rounded bg-sky-500/80 px-1.5 py-0.5 text-[10px] font-mono text-white">
-                {{ $mapLocations->count() }}
+                <span id="map-toolbar-count">{{ $mapLocations->count() }}</span>
             </span>
         </button>
         @if ($locations->total() > 0)
