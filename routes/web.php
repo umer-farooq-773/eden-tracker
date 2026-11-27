@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TrackerLiveMapController;
 use App\Http\Controllers\TrackerLocationIndexController;
 use App\Http\Controllers\TrackerLocationUpdatesController;
 use App\Http\Controllers\TrackerNotificationController;
@@ -9,6 +10,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/tracker/live-map', TrackerLiveMapController::class)
+    ->name('tracker.live-map');
 
 Route::get('/tracker/locations', TrackerLocationIndexController::class)
     ->name('tracker.locations.index');
