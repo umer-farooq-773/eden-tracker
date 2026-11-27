@@ -40,6 +40,25 @@
         .map-pulse-ring {
             animation: mapPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
+        #gps-map-modal > div {
+            height: 100dvh;
+            min-height: 0;
+            overflow: hidden;
+        }
+        #gps-map-modal > div > div:first-child {
+            flex: 0 0 auto;
+            max-height: 45dvh;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        #gps-map-modal > div > div:last-child {
+            min-height: 0;
+            overflow: hidden;
+        }
+        #maplibre-canvas {
+            position: absolute;
+            inset: 0;
+        }
     </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -324,14 +343,14 @@
     <!-- Full Screen GPS Route Map Modal -->
     <div
         id="gps-map-modal"
-        class="fixed inset-0 z-50 hidden flex-col bg-slate-950/80 backdrop-blur-sm transition-opacity"
+        class="fixed inset-0 z-[1000] hidden flex-col bg-slate-950/80 backdrop-blur-sm transition-opacity"
         role="dialog"
         aria-modal="true"
         aria-labelledby="map-modal-title"
     >
-        <div class="relative flex h-full w-full flex-col bg-slate-900 text-slate-100 shadow-2xl">
+        <div class="relative flex h-dvh min-h-0 w-full flex-col bg-slate-900 text-slate-100 shadow-2xl">
             <!-- Modal Header -->
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/95 px-4 py-3 sm:px-6">
+            <div class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/95 px-4 py-3 sm:px-6">
                 <div class="flex items-center gap-3">
                     <div class="flex size-9 items-center justify-center rounded-xl bg-sky-500/20 text-sky-400 ring-1 ring-sky-500/30">
                         <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -468,7 +487,7 @@
             </div>
 
             <!-- Map Container -->
-            <div class="relative flex-1 bg-slate-950">
+            <div class="relative min-h-0 flex-1 bg-slate-950">
                 <div id="maplibre-canvas" class="h-full w-full"></div>
 
                 <div id="nearby-places-status" class="absolute right-4 bottom-4 z-10 rounded-lg border border-slate-700/80 bg-slate-900/90 px-3 py-2 text-xs text-slate-200 shadow-xl" role="status" aria-live="polite">
