@@ -28,6 +28,7 @@ class TrackerDevice extends Model
             'last_seen_at' => 'immutable_datetime',
             'is_active' => 'boolean',
             'is_trip_tracking' => 'boolean',
+            'moving_without_trip_alerted_at' => 'immutable_datetime',
         ];
     }
 

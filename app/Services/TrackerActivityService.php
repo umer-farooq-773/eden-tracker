@@ -75,15 +75,17 @@ class TrackerActivityService
             }
         }
 
-        if (! $lockedDevice->is_trip_tracking) {
-            return;
-        }
-
         $trip = VehicleTrip::query()
             ->where('tracker_device_id', $lockedDevice->id)
             ->whereNull('ended_at')
             ->lockForUpdate()
             ->first();
+
+        if (! $trip && ! $lockedDevice->is_trip_tracking) {
+            $this->recordMovementWithoutTrip($lockedDevice, $location, $snapshot);
+
+            return;
+        }
 
         if (! $trip) {
             if (! $location->gps_fix) {
@@ -122,6 +124,11 @@ class TrackerActivityService
                 ->first();
 
             if ($trip) {
+                $lockedDevice->forceFill([
+                    'is_trip_tracking' => true,
+                    'moving_without_trip_alerted_at' => null,
+                ])->save();
+
                 return $trip;
             }
 
@@ -138,7 +145,10 @@ class TrackerActivityService
                 'started_at' => now('UTC'),
                 'location_points' => [$snapshot],
             ]);
-            $lockedDevice->forceFill(['is_trip_tracking' => true])->save();
+            $lockedDevice->forceFill([
+                'is_trip_tracking' => true,
+                'moving_without_trip_alerted_at' => null,
+            ])->save();
 
             TrackerNotification::query()->create([
                 'tracker_device_id' => $lockedDevice->id,
@@ -162,7 +172,10 @@ class TrackerActivityService
                 ->lockForUpdate()
                 ->first();
 
-            $lockedDevice->forceFill(['is_trip_tracking' => false])->save();
+            $lockedDevice->forceFill([
+                'is_trip_tracking' => false,
+                'moving_without_trip_alerted_at' => null,
+            ])->save();
             if (! $trip) {
                 return null;
             }
@@ -247,5 +260,87 @@ class TrackerActivityService
     private function parkingThresholdLabel(): int
     {
         return max(1, (int) config('tracker.parking_after_minutes', 5));
+    }
+
+    /** @param array<string, mixed> $snapshot */
+    private function recordMovementWithoutTrip(TrackerDevice $device, TrackerLocation $location, array $snapshot): void
+    {
+        if (! $location->gps_fix || $location->latitude === null || $location->longitude === null) {
+            return;
+        }
+
+        $speedKmh = $this->locationSpeedKmh($device, $location);
+        $minimumSpeedKmh = max(0.1, (float) config('tracker.moving_without_trip_speed_kmh', 5));
+
+        if ($speedKmh < $minimumSpeedKmh) {
+            if ($device->moving_without_trip_alerted_at !== null) {
+                $device->forceFill(['moving_without_trip_alerted_at' => null])->save();
+            }
+
+            return;
+        }
+
+        if ($device->moving_without_trip_alerted_at !== null) {
+            return;
+        }
+
+        TrackerNotification::query()->create([
+            'tracker_device_id' => $device->id,
+            'type' => 'vehicle_moving_without_trip',
+            'title' => 'Vehicle moving without a trip',
+            'message' => $device->name.' is moving at '.number_format($speedKmh, 1).' km/h, but no trip has been started.',
+            'data' => [
+                'speed_kmh' => round($speedKmh, 1),
+                'location' => $snapshot,
+            ],
+        ]);
+
+        $device->forceFill(['moving_without_trip_alerted_at' => $location->received_at ?? now('UTC')])->save();
+    }
+
+    private function locationSpeedKmh(TrackerDevice $device, TrackerLocation $location): float
+    {
+        $reportedSpeedKmh = $location->speed_kmh !== null ? (float) $location->speed_kmh : 0.0;
+        if ($location->latitude === null || $location->longitude === null || $location->received_at === null) {
+            return $reportedSpeedKmh;
+        }
+
+        $previousLocation = $device->locations()
+            ->where('gps_fix', true)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->whereNotNull('received_at')
+            ->where('id', '<', $location->id)
+            ->latest('received_at')
+            ->first();
+
+        if (! $previousLocation || $previousLocation->received_at === null) {
+            return $reportedSpeedKmh;
+        }
+
+        $elapsedSeconds = $location->received_at->getTimestamp() - $previousLocation->received_at->getTimestamp();
+        if ($elapsedSeconds <= 0) {
+            return $reportedSpeedKmh;
+        }
+
+        $distanceKm = $this->distanceKm(
+            (float) $previousLocation->latitude,
+            (float) $previousLocation->longitude,
+            (float) $location->latitude,
+            (float) $location->longitude,
+        );
+
+        return max($reportedSpeedKmh, $distanceKm * 3600 / $elapsedSeconds);
+    }
+
+    private function distanceKm(float $fromLatitude, float $fromLongitude, float $toLatitude, float $toLongitude): float
+    {
+        $earthRadiusKm = 6371;
+        $latitudeDelta = deg2rad($toLatitude - $fromLatitude);
+        $longitudeDelta = deg2rad($toLongitude - $fromLongitude);
+        $haversine = sin($latitudeDelta / 2) ** 2
+            + cos(deg2rad($fromLatitude)) * cos(deg2rad($toLatitude)) * sin($longitudeDelta / 2) ** 2;
+
+        return $earthRadiusKm * 2 * atan2(sqrt($haversine), sqrt(max(0, 1 - $haversine)));
     }
 }

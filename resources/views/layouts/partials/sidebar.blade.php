@@ -44,6 +44,13 @@
         @endforeach
     </nav>
 
+    <div class="px-3 pb-3">
+        <a href="{{ route('tracker.locations.index') }}#vehicle-trips" class="flex items-center gap-3 rounded-lg bg-emerald-600 px-3 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-400/30">
+            <i class="fa-solid fa-play fa-fw shrink-0 text-sm" aria-hidden="true"></i>
+            <span>Start Trip</span>
+        </a>
+    </div>
+
     {{-- Logout --}}
     {{-- <div class="border-t border-white/10 px-3 py-3">
         <form method="POST" action="{{ Route::has('logout') ? route('logout') : '#' }}">

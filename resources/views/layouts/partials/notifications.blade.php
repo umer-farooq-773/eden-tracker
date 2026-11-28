@@ -1,4 +1,4 @@
-<div class="relative" id="tracker-notifications" data-index-url="{{ route('tracker.notifications.index') }}" data-read-url="{{ route('tracker.notifications.read') }}">
+<div class="relative" id="tracker-notifications" data-index-url="{{ route('tracker.notifications.index') }}" data-read-url="{{ route('tracker.notifications.read') }}" data-trips-url="{{ route('tracker.locations.index') }}">
     <button id="notification-toggle" type="button" class="relative inline-flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50" aria-label="Notifications" aria-expanded="false" aria-controls="notification-panel">
         <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
@@ -20,6 +20,8 @@
     </section>
 </div>
 
+<div id="notification-toast-region" class="pointer-events-none fixed right-4 top-20 z-[60] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2" aria-live="polite" aria-atomic="false"></div>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const root = document.getElementById('tracker-notifications');
@@ -28,7 +30,39 @@
         const count = document.getElementById('notification-count');
         const list = document.getElementById('notification-list');
         const markRead = document.getElementById('notification-mark-read');
+        const toastRegion = document.getElementById('notification-toast-region');
         if (!root || !toggle || !panel || !count || !list) return;
+        let latestNotificationId = null;
+
+        function notificationUrl(notification) {
+            return notification.tracker_device_id
+                ? `${root.dataset.tripsUrl}#vehicle-trip-${notification.tracker_device_id}`
+                : `${root.dataset.tripsUrl}#vehicle-trips`;
+        }
+
+        function showNotificationToast(notification) {
+            if (!toastRegion) return;
+
+            const toast = document.createElement('a');
+            toast.href = notificationUrl(notification);
+            toast.className = 'pointer-events-auto block rounded-xl border border-slate-200 bg-white p-4 text-left shadow-xl shadow-slate-900/15 transition hover:border-indigo-300 hover:bg-indigo-50 focus:outline-none focus:ring-4 focus:ring-indigo-200';
+
+            const title = document.createElement('p');
+            title.className = 'text-sm font-semibold text-slate-900';
+            title.textContent = notification.title;
+
+            const message = document.createElement('p');
+            message.className = 'mt-1 text-xs leading-5 text-slate-600';
+            message.textContent = notification.message;
+
+            const vehicle = document.createElement('p');
+            vehicle.className = 'mt-2 text-[11px] font-medium text-indigo-700';
+            vehicle.textContent = `${notification.device_name} · Click to open trip controls`;
+
+            toast.append(title, message, vehicle);
+            toastRegion.prepend(toast);
+            window.setTimeout(() => toast.remove(), 12000);
+        }
 
         async function refreshNotifications() {
             try {
@@ -39,8 +73,22 @@
                 count.textContent = unread > 99 ? '99+' : String(unread);
                 count.classList.toggle('hidden', unread === 0);
 
+                const notifications = payload.notifications || [];
+                const notificationIds = notifications.map(notification => Number(notification.id)).filter(Number.isFinite);
+                const newestNotificationId = notificationIds.length ? Math.max(...notificationIds) : 0;
+                if (latestNotificationId === null) {
+                    latestNotificationId = newestNotificationId;
+                } else if (newestNotificationId > latestNotificationId) {
+                    notifications
+                        .filter(notification => Number(notification.id) > latestNotificationId)
+                        .sort((first, second) => Number(first.id) - Number(second.id))
+                        .slice(-3)
+                        .forEach(showNotificationToast);
+                    latestNotificationId = newestNotificationId;
+                }
+
                 list.replaceChildren();
-                if (!payload.notifications?.length) {
+                if (!notifications.length) {
                     const empty = document.createElement('p');
                     empty.className = 'px-4 py-6 text-center text-sm text-slate-500';
                     empty.textContent = 'No notifications yet.';
@@ -48,9 +96,10 @@
                     return;
                 }
 
-                payload.notifications.forEach(notification => {
-                    const item = document.createElement('article');
-                    item.className = `px-4 py-3 ${notification.read ? 'bg-white' : 'bg-blue-50/70'}`;
+                notifications.forEach(notification => {
+                    const item = document.createElement('a');
+                    item.href = notificationUrl(notification);
+                    item.className = `block px-4 py-3 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none ${notification.read ? 'bg-white' : 'bg-blue-50/70'}`;
                     const title = document.createElement('p');
                     title.className = 'text-sm font-semibold text-slate-900';
                     title.textContent = notification.title;

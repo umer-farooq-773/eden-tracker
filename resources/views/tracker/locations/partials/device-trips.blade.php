@@ -1,4 +1,4 @@
-<section class="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="device-trips-heading">
+<section id="vehicle-trips" class="mb-6 scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="device-trips-heading">
     @if ($errors->has('tracker'))
         <div class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">{{ $errors->first('tracker') }}</div>
     @endif
@@ -12,12 +12,12 @@
 
     <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         @forelse ($devices as $device)
-            <article class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-4">
+            <article id="vehicle-trip-{{ $device->id }}" class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-4">
                 <div class="min-w-0">
                     <p class="truncate text-sm font-semibold text-slate-900">{{ $device->name }}</p>
                     <p class="mt-0.5 truncate text-xs text-slate-500">{{ $device->device_id }}</p>
                     <p class="mt-2 text-xs {{ $device->activeTrip ? 'text-emerald-700' : 'text-slate-500' }}">
-                        {{ $device->activeTrip ? 'Trip active since '.$device->activeTrip->started_at->timezone('Asia/Karachi')->format('M j, g:i A') : ($device->is_trip_tracking ? 'Waiting for GPS update' : 'Trip stopped') }}
+                        {{ $device->activeTrip ? 'Trip active since '.$device->activeTrip->started_at->timezone('Asia/Karachi')->format('M j, g:i A') : ($device->is_trip_tracking ? 'Waiting for GPS update' : 'No active trip') }}
                     </p>
                 </div>
                 @if ($device->is_trip_tracking)

@@ -24,6 +24,7 @@ class TrackerNotificationController extends Controller
                 'message' => $notification->message,
                 'data' => $notification->data,
                 'device_name' => $notification->trackerDevice?->name ?? 'Vehicle',
+                'tracker_device_id' => $notification->trackerDevice?->id,
                 'created_at' => $notification->created_at?->timezone('Asia/Karachi')->format('M j, Y · g:i A'),
                 'read' => $notification->read_at !== null,
             ]);
